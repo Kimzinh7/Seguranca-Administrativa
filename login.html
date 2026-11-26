@@ -50,6 +50,7 @@ input:focus-visible{border-color:var(--amber);outline-offset:0}
 .submit:hover{background:var(--graphite)}
 .submit:disabled{opacity:.55;cursor:wait}
 .msg{min-height:28px;font-size:21px;font-weight:700}
+.tagmod{display:inline-block;flex:none;background:#F2B632;color:#2B1F00;font-size:.62em;font-weight:800;letter-spacing:.1em;padding:1px 7px;border-radius:4px;vertical-align:middle}
 .msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
 
 .me{margin-top:22px;background:var(--light);border-left:8px solid var(--amber);border-radius:10px;padding:20px 22px}
@@ -102,7 +103,7 @@ footer a{font-weight:700}
   <section id="user" hidden>
    <div class="me">
     <h2>Você está logado</h2>
-    <p>Conta: <b id="who"></b></p>
+    <p>Conta: <b id="who"></b> <span class="tagmod" id="whomod" hidden>MOD</span></p>
    </div>
    <a class="chat" href="chat.html">Abrir o chat da equipe</a>
    <button class="submit out" id="logout" type="button" style="width:100%">Sair da conta</button>
@@ -113,6 +114,7 @@ footer a{font-weight:700}
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getFirestore,doc,getDoc}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ============================================================
@@ -145,8 +147,11 @@ const ERR={
  "auth/invalid-api-key":"A chave do Firebase está errada. Confira a configuração."
 };
 
-let auth=null;
-if(configured){auth=getAuth(initializeApp(firebaseConfig))}
+let auth=null,db=null;
+if(configured){const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app)}
+const ADMINS=["l80KjxxidVenEKOZbkmHVYnUCTD3"];
+async function checkStaff(u){if(ADMINS.includes(u.uid))return true;try{return(await getDoc(doc(db,"staff",u.uid))).exists()}catch(e){return false}}
+
 
 const Auth={
   async register(name,pass){
@@ -164,7 +169,9 @@ const $=id=>document.getElementById(id),msg=$("msg");
 const say=(t,ok)=>{msg.textContent=t;msg.className="msg "+(t?(ok?"ok":"bad"):"")};
 function render(u){
   $("guest").hidden=!!u;$("user").hidden=!u;
-  if(u)$("who").textContent=nameOf(u);
+  $("whomod").hidden=true;
+  if(u){$("who").textContent=nameOf(u);
+    checkStaff(u).then(v=>{if(auth.currentUser&&auth.currentUser.uid===u.uid)$("whomod").hidden=!v})}
 }
 function tab(reg){
   $("f-login").hidden=reg;$("f-reg").hidden=!reg;
