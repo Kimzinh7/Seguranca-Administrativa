@@ -71,7 +71,7 @@ footer a{font-weight:700}
 
  <main class="content">
   <!-- visitante -->
-  <section id="guest">
+  <section id="guest" hidden>
    <div class="switch" role="tablist" aria-label="Acesso">
     <button type="button" role="tab" id="t-login" aria-selected="true">Entrar</button>
     <button type="button" role="tab" id="t-reg" aria-selected="false">Cadastrar</button>
@@ -109,75 +109,93 @@ footer a{font-weight:700}
  <footer><a href="index.html">Voltar ao início</a></footer>
 </div>
 
-<script>
-/* ---------------------------------------------------------------
-   AUTH: contas guardadas no navegador (localStorage).
-   Para ter contas e chat compartilhados entre todos, troque as
-   4 funções do objeto Auth por chamadas a um servidor
-   (Firebase, Supabase, etc.). O resto da página não muda.
----------------------------------------------------------------- */
-const Auth=(()=>{
-  const U='sa_users',S='sa_session';
-  const read=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
-  const write=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
-  const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
-  async function hash(pass,salt){
-    if(!(window.crypto&&crypto.subtle))throw new Error('Seu navegador não suporta criptografia. Abra o site por https.');
-    return hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(salt+':'+pass)));
-  }
-  const valid=n=>/^[A-Za-z0-9._]{3,20}$/.test(n);
-  return{
-    current(){return read(S)},
-    async register(name,pass){
-      name=name.trim();
-      if(!valid(name))throw new Error('Nome inválido. Use de 3 a 20 letras, números, ponto ou underline, sem espaços.');
-      if(pass.length<6)throw new Error('A senha precisa ter pelo menos 6 caracteres.');
-      const users=read(U)||{},key=name.toLowerCase();
-      if(users[key])throw new Error('Esse nome já está em uso. Escolha outro.');
-      const salt=hex(crypto.getRandomValues(new Uint8Array(16)));
-      users[key]={name,salt,hash:await hash(pass,salt),created:Date.now()};
-      if(!write(U,users))throw new Error('Não foi possível salvar. Verifique se o navegador permite armazenamento.');
-      write(S,name);return name;
-    },
-    async login(name,pass){
-      const u=(read(U)||{})[name.trim().toLowerCase()];
-      if(!u||u.hash!==await hash(pass,u.salt))throw new Error('Nome ou senha incorretos.');
-      write(S,u.name);return u.name;
-    },
-    logout(){try{localStorage.removeItem(S)}catch(e){}}
-  };
-})();
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const $=id=>document.getElementById(id),msg=$('msg');
-const say=(t,ok)=>{msg.textContent=t;msg.className='msg '+(t?(ok?'ok':'bad'):'')};
-function view(){
-  const n=Auth.current();
-  $('guest').hidden=!!n;$('user').hidden=!n;
-  if(n)$('who').textContent=n;
+/* ============================================================
+   1) COLE AQUI a configuração do seu projeto Firebase
+   (Firebase Console > Configurações do projeto > Seus apps > Web)
+   ============================================================ */
+const firebaseConfig={
+  apiKey:"COLE_AQUI",
+  authDomain:"COLE_AQUI",
+  projectId:"COLE_AQUI",
+  appId:"COLE_AQUI"
+};
+const configured=!firebaseConfig.apiKey.startsWith("COLE");
+
+/* O Firebase exige e-mail, então o nome da conta vira um e-mail interno
+   (nome@usuarios.sa-rp.com). Ninguém recebe e-mail nenhum, é só um identificador. */
+const MAIL="@usuarios.sa-rp.com";
+const valid=n=>/^[A-Za-z0-9._]{3,20}$/.test(n);
+const nameOf=u=>u.displayName||u.email.split("@")[0];
+const ERR={
+ "auth/email-already-in-use":"Esse nome já está em uso. Escolha outro.",
+ "auth/invalid-credential":"Nome ou senha incorretos.",
+ "auth/user-not-found":"Nome ou senha incorretos.",
+ "auth/wrong-password":"Nome ou senha incorretos.",
+ "auth/weak-password":"A senha precisa ter pelo menos 6 caracteres.",
+ "auth/too-many-requests":"Muitas tentativas. Espere um pouco e tente de novo.",
+ "auth/network-request-failed":"Sem conexão com o servidor. Verifique sua internet.",
+ "auth/operation-not-allowed":"O login por e-mail e senha não está ativado no Firebase.",
+ "auth/unauthorized-domain":"Este site não está na lista de domínios autorizados do Firebase.",
+ "auth/invalid-api-key":"A chave do Firebase está errada. Confira a configuração."
+};
+
+let auth=null;
+if(configured){auth=getAuth(initializeApp(firebaseConfig))}
+
+const Auth={
+  async register(name,pass){
+    name=name.trim();
+    if(!valid(name))throw new Error("Nome inválido. Use de 3 a 20 letras, números, ponto ou underline, sem espaços.");
+    if(pass.length<6)throw new Error("A senha precisa ter pelo menos 6 caracteres.");
+    const c=await createUserWithEmailAndPassword(auth,name.toLowerCase()+MAIL,pass);
+    await updateProfile(c.user,{displayName:name});
+  },
+  async login(name,pass){await signInWithEmailAndPassword(auth,name.trim().toLowerCase()+MAIL,pass)},
+  logout(){return signOut(auth)}
+};
+
+const $=id=>document.getElementById(id),msg=$("msg");
+const say=(t,ok)=>{msg.textContent=t;msg.className="msg "+(t?(ok?"ok":"bad"):"")};
+function render(u){
+  $("guest").hidden=!!u;$("user").hidden=!u;
+  if(u)$("who").textContent=nameOf(u);
 }
 function tab(reg){
-  $('f-login').hidden=reg;$('f-reg').hidden=!reg;
-  $('t-login').setAttribute('aria-selected',!reg);$('t-reg').setAttribute('aria-selected',reg);
-  say('');
+  $("f-login").hidden=reg;$("f-reg").hidden=!reg;
+  $("t-login").setAttribute("aria-selected",!reg);$("t-reg").setAttribute("aria-selected",reg);
+  say("");
 }
-$('t-login').onclick=()=>tab(false);
-$('t-reg').onclick=()=>tab(true);
-document.querySelectorAll('[data-show]').forEach(c=>c.onchange=()=>
-  c.dataset.show.split(' ').forEach(id=>$(id).type=c.checked?'text':'password'));
+$("t-login").onclick=()=>tab(false);
+$("t-reg").onclick=()=>tab(true);
+document.querySelectorAll("[data-show]").forEach(c=>c.onchange=()=>
+  c.dataset.show.split(" ").forEach(id=>$(id).type=c.checked?"text":"password"));
 
 async function run(form,fn){
-  const b=form.querySelector('.submit');b.disabled=true;say('');
-  try{await fn();view()}catch(e){say(e.message,false)}finally{b.disabled=false}
+  const b=form.querySelector(".submit");b.disabled=true;say("");
+  try{await fn();if(auth.currentUser)render(auth.currentUser)}
+  catch(e){say(ERR[e.code]||e.message||"Erro inesperado. Tente de novo.",false)}
+  finally{b.disabled=false}
 }
-$('f-login').onsubmit=e=>{e.preventDefault();
-  run(e.target,()=>Auth.login($('l-user').value,$('l-pass').value))};
-$('f-reg').onsubmit=e=>{e.preventDefault();
+$("f-login").onsubmit=e=>{e.preventDefault();
+  run(e.target,()=>Auth.login($("l-user").value,$("l-pass").value))};
+$("f-reg").onsubmit=e=>{e.preventDefault();
   run(e.target,async()=>{
-    if($('r-pass').value!==$('r-pass2').value)throw new Error('As senhas não são iguais.');
-    await Auth.register($('r-user').value,$('r-pass').value);
+    if($("r-pass").value!==$("r-pass2").value)throw new Error("As senhas não são iguais.");
+    await Auth.register($("r-user").value,$("r-pass").value);
   })};
-$('logout').onclick=()=>{Auth.logout();$('l-pass').value='';tab(false);view()};
-view();
+$("logout").onclick=async()=>{await Auth.logout();$("l-pass").value="";tab(false)};
+
+if(configured){
+  onAuthStateChanged(auth,u=>render(u));
+}else{
+  render(null);
+  document.querySelectorAll(".submit").forEach(b=>b.disabled=true);
+  say("O servidor de contas ainda não foi configurado. Falta colar a configuração do Firebase no código.",false);
+}
 </script>
 </body>
 </html>
