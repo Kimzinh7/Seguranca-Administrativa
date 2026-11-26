@@ -144,8 +144,11 @@ function render(docs){
 
 function start(){
   const q=query(collection(db,"messages"),orderBy("createdAt","desc"),limit(50));
-  unsub=onSnapshot(q,snap=>{say("");render(snap.docs.slice().reverse());log.scrollTop=log.scrollHeight},
+  let got=false;
+  const timer=setTimeout(()=>{if(!got)say("Não consegui conectar ao banco do chat. Confira no Firebase se o Firestore Database foi criado e se as regras foram publicadas.")},8000);
+  unsub=onSnapshot(q,snap=>{got=true;clearTimeout(timer);say("");render(snap.docs.slice().reverse());log.scrollTop=log.scrollHeight},
     err=>{
+      got=true;clearTimeout(timer);
       log.textContent="";
       say(err.code==="permission-denied"
         ?"Sem permissão. As regras do Firestore ainda não foram publicadas."
@@ -174,9 +177,13 @@ $("form").onsubmit=async e=>{
   if(wait>0){say("Calma! Espere "+Math.ceil(wait/1000)+"s para enviar outra.");return}
   send.disabled=true;say("");
   try{
-    await addDoc(collection(db,"messages"),{uid:me.uid,name:nameOf(me),text:t,staff,createdAt:serverTimestamp()});
+    try{staff=(await getDoc(doc(db,"staff",me.uid))).exists()}catch(e){staff=false}
+    const limite=new Promise((_,rej)=>setTimeout(()=>rej({code:"timeout"}),10000));
+    await Promise.race([addDoc(collection(db,"messages"),{uid:me.uid,name:nameOf(me),text:t,staff,createdAt:serverTimestamp()}),limite]);
     text.value="";$("count").textContent="0/300";lastSent=Date.now();
-  }catch(err){say(err.code==="permission-denied"?"Mensagem recusada pelas regras do chat.":"Não foi possível enviar. Tente de novo.")}
+  }catch(err){say(err.code==="permission-denied"?"Mensagem recusada pelas regras do chat."
+    :err.code==="timeout"?"O servidor não respondeu. Confira se o Firestore foi criado e se as regras foram publicadas."
+    :"Não foi possível enviar. Tente de novo.")}
   finally{send.disabled=false;text.focus()}
 };
 </script>
