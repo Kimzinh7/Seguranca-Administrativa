@@ -56,6 +56,8 @@ input:focus-visible{border-color:var(--amber);outline-offset:0}
 .me h2{margin:0 0 6px;font-size:32px;text-transform:uppercase;letter-spacing:.05em}
 .me p{margin:0 0 6px}
 .chat{margin-top:16px;border:2px dashed var(--steel);border-radius:10px;padding:26px 16px;text-align:center;font-size:22px;font-weight:700;color:var(--steel);text-transform:uppercase;letter-spacing:.08em}
+a.chat{display:block;text-decoration:none;border-style:solid;border-color:var(--amber);color:var(--ink)}
+a.chat:hover{background:var(--light)}
 .out{margin-top:16px}
 [hidden]{display:none!important}
 footer{text-align:center;font-size:19px;padding:20px 16px 34px;color:var(--steel)}
@@ -102,7 +104,7 @@ footer a{font-weight:700}
     <h2>Você está logado</h2>
     <p>Conta: <b id="who"></b></p>
    </div>
-   <div class="chat">Chat da equipe em breve</div>
+   <a class="chat" href="chat.html">Abrir o chat da equipe</a>
    <button class="submit out" id="logout" type="button" style="width:100%">Sair da conta</button>
   </section>
  </main>
