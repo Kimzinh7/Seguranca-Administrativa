@@ -67,6 +67,19 @@ a{color:inherit}
 .desc ol{margin:0;padding-left:22px}
 .desc:target{box-shadow:0 0 0 3px var(--amber)}
 
+/* perfil */
+.profile{position:absolute;right:8px;top:8px;z-index:3}
+.chip{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid #3A4048;border-radius:99px;padding:4px 14px 4px 4px;color:#fff;text-decoration:none;font:inherit;font-weight:700;font-size:19px;cursor:pointer;max-width:170px}
+.chip:hover{background:rgba(255,255,255,.18)}
+.chip b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(160deg,#6B737D,#343A42);display:block;flex:none;overflow:hidden}
+.av svg{width:100%;height:100%;display:block}
+.pmenu{position:absolute;right:0;top:48px;min-width:200px;background:var(--black);color:#fff;border:1px solid var(--steel);border-radius:10px;padding:14px;display:grid;gap:6px;text-align:left}
+.pmenu small{color:var(--gray);font-size:17px}
+.pmenu strong{font-size:24px;word-break:break-all}
+.pmenu button{font:inherit;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--amber);color:#2B1F00;border:0;border-radius:6px;padding:9px;cursor:pointer;margin-top:4px}
+[hidden]{display:none!important}
+
 footer{text-align:center;color:var(--steel);font-size:18px;padding:22px 16px 34px}
 footer a{font-weight:700;color:inherit}
 </style>
@@ -78,6 +91,11 @@ footer a{font-weight:700;color:inherit}
 <div class="page">
  <header class="top">
   <button class="menu-btn" id="open" aria-label="Abrir menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+  <div class="profile" id="profile" hidden>
+   <a class="chip" id="chip-guest" href="login.html" hidden><span class="av"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="14" r="6.500" fill="#D5DAE0"/><path d="M5 36c1-8 6-12 13-12s12 4 13 12Z" fill="#D5DAE0"/></svg></span><b>Entrar</b></a>
+   <button class="chip" id="chip-user" type="button" aria-haspopup="true" aria-expanded="false" hidden><span class="av"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="14" r="6.500" fill="#D5DAE0"/><path d="M5 36c1-8 6-12 13-12s12 4 13 12Z" fill="#D5DAE0"/></svg></span><b id="pname"></b></button>
+   <div class="pmenu" id="pmenu" hidden><small>Logado como</small><strong id="pname2"></strong><button id="plogout" type="button">Sair da conta</button></div>
+  </div>
   <h1>Segurança<br>Administrativa</h1>
   <p>ROLEPLAY NO ROBLOX</p>
  </header>
@@ -118,6 +136,29 @@ const dr=document.getElementById('drawer');
 document.getElementById('open').onclick=()=>dr.classList.add('open');
 document.getElementById('scrim').onclick=()=>dr.classList.remove('open');
 dr.querySelectorAll('a').forEach(a=>a.onclick=()=>dr.classList.remove('open'));
+</script>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const firebaseConfig={
+  apiKey:"AIzaSyASeulxbc3-6_4lSpOKoNYQr3-Ty3LunY0",
+  authDomain:"seguranca-administrativa-rp.firebaseapp.com",
+  projectId:"seguranca-administrativa-rp",
+  appId:"1:328077742653:web:7cf945c2ef237ea7ce1054"
+};
+const $=id=>document.getElementById(id);
+const auth=getAuth(initializeApp(firebaseConfig));
+const menu=$("pmenu"),chip=$("chip-user");
+function closeMenu(){menu.hidden=true;chip.setAttribute("aria-expanded","false")}
+chip.onclick=e=>{e.stopPropagation();const o=menu.hidden;menu.hidden=!o;chip.setAttribute("aria-expanded",o)};
+document.addEventListener("click",closeMenu);
+menu.onclick=e=>e.stopPropagation();
+$("plogout").onclick=async()=>{await signOut(auth);closeMenu()};
+onAuthStateChanged(auth,u=>{
+  $("profile").hidden=false;
+  $("chip-guest").hidden=!!u;chip.hidden=!u;closeMenu();
+  if(u){const n=u.displayName||u.email.split("@")[0];$("pname").textContent=n;$("pname2").textContent=n}
+});
 </script>
 </body>
 </html>
