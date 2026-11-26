@@ -1,1 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marinha do Atlântico | Roblox RP</title>
+<meta name="description" content="Página oficial da Marinha do Atlântico no Roblox RP: hierarquia, divisões e como se alistar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --mar: #0c2a45;
+    --carta: #e4edf1;
+    --papel: #f6f9fa;
+    --sinal: #c8332b;
+    --latao: #a9832f;
+    --texto: #14222e;
+    --linha: #b9cad3;
+    --display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+    --corpo: "Source Serif 4", Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--carta); color: var(--texto); font: 1.0625rem/1.65 var(--corpo); }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--sinal); outline-offset: 3px; }
+  .wrap { max-width: 68rem; margin: 0 auto; padding: 0 1.25rem; }
 
+  /* Topo */
+  header.topo { background: var(--mar); color: var(--papel); }
+  header.topo .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; padding-top: .9rem; padding-bottom: .9rem; }
+  .marca { font: 700 1.35rem/1 var(--display); letter-spacing: .04em; text-decoration: none; }
+  nav { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
+  nav a { text-decoration: none; padding: .25rem 0; border-bottom: 2px solid transparent; }
+  nav a:hover { border-color: var(--latao); }
+
+  /* Capa */
+  .capa { background: var(--mar); color: var(--papel); padding: 3.5rem 0 0; }
+  .capa h1 { font: 700 clamp(3rem, 11vw, 8rem)/.9 var(--display); letter-spacing: .01em; margin: 0 0 1.25rem; text-transform: uppercase; }
+  .capa p { max-width: 36rem; margin: 0 0 1.75rem; font-size: 1.2rem; color: #d3e0e7; }
+  .botoes { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 3rem; }
+  .btn { display: inline-block; padding: .75rem 1.4rem; font: 700 1.1rem/1 var(--display); letter-spacing: .05em; text-decoration: none; border: 2px solid var(--papel); }
+  .btn.principal { background: var(--sinal); border-color: var(--sinal); color: #fff; }
+  .btn.principal:hover { background: #a9281f; border-color: #a9281f; }
+  .btn.sec:hover { background: var(--papel); color: var(--mar); }
+  /* Bandeiras de sinais: faixa decorativa */
+  .bandeiras { display: flex; height: 2.75rem; }
+  .bandeiras span { flex: 1; }
+  .b1 { background: var(--papel); } .b2 { background: var(--sinal); } .b3 { background: var(--latao); }
+  .b4 { background: linear-gradient(90deg, var(--papel) 50%, var(--mar) 50%); }
+  .b5 { background: var(--sinal); } .b6 { background: var(--papel); } .b7 { background: var(--latao); }
+  .b8 { background: linear-gradient(var(--sinal) 50%, var(--papel) 50%); }
+
+  /* Seções */
+  section { padding: 4rem 0 1rem; }
+  h2 { font: 700 2.4rem/1 var(--display); color: var(--mar); margin: 0 0 .5rem; text-transform: uppercase; letter-spacing: .02em; }
+  .intro { max-width: 40rem; margin: 0 0 2rem; }
+  h3 { font: 700 1.5rem/1.1 var(--display); margin: 0 0 .4rem; color: var(--mar); }
+
+  /* Hierarquia */
+  .tabela { overflow-x: auto; background: var(--papel); border: 1px solid var(--linha); }
+  table { border-collapse: collapse; width: 100%; min-width: 30rem; }
+  th, td { text-align: left; padding: .7rem 1rem; border-bottom: 1px solid var(--linha); vertical-align: top; }
+  th { font: 700 1.1rem/1.2 var(--display); background: var(--mar); color: var(--papel); letter-spacing: .04em; }
+  tr.grupo td { background: var(--carta); font: 700 1.15rem/1.2 var(--display); color: var(--mar); letter-spacing: .03em; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+
+  /* Divisões */
+  .divisoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.5rem; }
+  .divisoes article { padding-top: .9rem; border-top: 4px solid var(--sinal); }
+  .divisoes article:nth-child(2) { border-color: var(--latao); }
+  .divisoes article:nth-child(3) { border-color: var(--mar); }
+  .divisoes p { margin: 0; }
+
+  /* Como entrar */
+  ol.passos { margin: 0; padding: 0; list-style: none; counter-reset: p; max-width: 40rem; }
+  ol.passos li { counter-increment: p; position: relative; padding: 0 0 1.4rem 3.4rem; }
+  ol.passos li::before { content: counter(p); position: absolute; left: 0; top: -.15rem; width: 2.4rem; height: 2.4rem; display: grid; place-items: center; background: var(--mar); color: var(--papel); font: 700 1.3rem/1 var(--display); }
+  ol.passos strong { display: block; font: 700 1.3rem/1.2 var(--display); color: var(--mar); }
+
+  /* Regras */
+  ul.regras { margin: 0; padding-left: 1.2rem; max-width: 40rem; }
+  ul.regras li { margin-bottom: .6rem; }
+
+  footer { margin-top: 4rem; background: var(--mar); color: #c4d4dc; padding: 2rem 0; font-size: .95rem; }
+  footer p { margin: 0 0 .4rem; }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="#topo">MARINHA DO ATLÂNTICO</a>
+    <nav aria-label="Principal">
+      <a href="#hierarquia">Hierarquia</a>
+      <a href="#divisoes">Divisões</a>
+      <a href="#alistamento">Alistamento</a>
+      <a href="#regras">Regras</a>
+    </nav>
+  </div>
+</header>
+
+<main id="topo">
+  <div class="capa">
+    <div class="wrap">
+      <h1>Marinha do Atlântico</h1>
+      <!-- EDITE: descrição curta do seu grupo -->
+      <p>Frota oficial do Roblox RP. Patrulha, treinamento e operações navais com hierarquia real e comunidade ativa.</p>
+      <div class="botoes">
+        <!-- EDITE: troque os links abaixo pelos do seu Discord e do seu grupo Roblox -->
+        <a class="btn principal" href="https://discord.gg/SEU-CONVITE">Entrar no Discord</a>
+        <a class="btn sec" href="https://www.roblox.com/groups/SEU-ID">Grupo no Roblox</a>
+      </div>
+    </div>
+    <div class="bandeiras" aria-hidden="true">
+      <span class="b1"></span><span class="b2"></span><span class="b3"></span><span class="b4"></span>
+      <span class="b5"></span><span class="b6"></span><span class="b7"></span><span class="b8"></span>
+    </div>
+  </div>
+
+  <section id="hierarquia">
+    <div class="wrap">
+      <h2>Hierarquia</h2>
+      <p class="intro">Da recruta ao comando. Cada patente tem responsabilidades próprias dentro da frota.</p>
+      <!-- EDITE: ajuste as patentes e funções para o seu RP -->
+      <div class="tabela">
+        <table>
+          <thead><tr><th>Patente</th><th>Função</th></tr></thead>
+          <tbody>
+            <tr class="grupo"><td colspan="2">Oficiais-generais</td></tr>
+            <tr><td>Almirante</td><td>Comando supremo da Marinha</td></tr>
+            <tr><td>Vice-Almirante</td><td>Subcomando e gestão das divisões</td></tr>
+            <tr><td>Contra-Almirante</td><td>Comando de esquadras</td></tr>
+            <tr class="grupo"><td colspan="2">Oficiais</td></tr>
+            <tr><td>Capitão de Mar e Guerra</td><td>Comando de navios principais</td></tr>
+            <tr><td>Capitão de Fragata</td><td>Comando de fragatas e imediato</td></tr>
+            <tr><td>Capitão-Tenente</td><td>Chefe de departamento</td></tr>
+            <tr><td>Primeiro-Tenente</td><td>Liderança de equipes em missão</td></tr>
+            <tr><td>Guarda-Marinha</td><td>Oficial em formação</td></tr>
+            <tr class="grupo"><td colspan="2">Praças</td></tr>
+            <tr><td>Suboficial</td><td>Supervisão e instrução das praças</td></tr>
+            <tr><td>Sargento</td><td>Chefia de turma e patrulhas</td></tr>
+            <tr><td>Cabo</td><td>Apoio operacional</td></tr>
+            <tr><td>Marinheiro</td><td>Tripulação ativa</td></tr>
+            <tr><td>Recruta</td><td>Em treinamento básico</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="divisoes">
+    <div class="wrap">
+      <h2>Divisões</h2>
+      <p class="intro">Depois do treinamento básico, você pode se especializar.</p>
+      <!-- EDITE: nomes e descrições das divisões -->
+      <div class="divisoes">
+        <article>
+          <h3>Esquadra de Superfície</h3>
+          <p>Navios de guerra, patrulha costeira e escolta de comboios.</p>
+        </article>
+        <article>
+          <h3>Fuzileiros Navais</h3>
+          <p>Desembarques, segurança de bases e operações em terra.</p>
+        </article>
+        <article>
+          <h3>Aviação Naval</h3>
+          <p>Helicópteros e aeronaves embarcadas para apoio e resgate.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="alistamento">
+    <div class="wrap">
+      <h2>Como se alistar</h2>
+      <p class="intro">O processo leva poucos minutos.</p>
+      <ol class="passos">
+        <li><strong>Entre no Discord</strong>Leia o canal de boas-vindas e as regras.</li>
+        <li><strong>Entre no grupo do Roblox</strong>Peça para entrar e aguarde a aprovação.</li>
+        <li><strong>Faça o treinamento básico</strong>Participe de uma sessão de recrutas e receba sua primeira patente.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="regras">
+    <div class="wrap">
+      <h2>Regras</h2>
+      <p class="intro">Resumo das regras. A versão completa fica no Discord.</p>
+      <!-- EDITE: coloque as regras reais do seu grupo -->
+      <ul class="regras">
+        <li>Respeite a hierarquia e os outros membros.</li>
+        <li>Fale em personagem durante operações e patrulhas.</li>
+        <li>Sem exploits, trapaças ou abuso de falhas do jogo.</li>
+        <li>Siga as ordens de patentes superiores durante missões.</li>
+        <li>Respeite as regras de conduta do Roblox o tempo todo.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Marinha do Atlântico, grupo de roleplay no Roblox.</p>
+    <p>Projeto de fãs, sem vínculo com a Roblox Corporation nem com forças armadas reais.</p>
+  </div>
+</footer>
+
+</body>
+</html>
