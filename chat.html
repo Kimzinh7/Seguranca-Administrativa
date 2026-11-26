@@ -59,6 +59,7 @@ textarea:focus-visible{border-color:var(--amber);outline-offset:0}
 button.send{font:inherit;font-size:24px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:var(--black);color:#fff;border:0;border-radius:6px 6px 6px 22px;padding:0 22px;cursor:pointer}
 button.send:hover{background:var(--graphite)}
 button.send:disabled{opacity:.5;cursor:not-allowed}
+.debug{margin:0;background:var(--black);color:#9FE3B4;border-radius:8px;padding:10px 14px;font:600 15px/1.35 ui-monospace,Consolas,monospace;overflow-wrap:anywhere;user-select:all}
 .status{min-height:24px;font-size:19px;font-weight:700;color:var(--bad)}
 .count{font-size:16px;color:var(--steel);text-align:right;margin-top:-8px}
 footer{text-align:center;font-size:19px;padding:8px 16px 28px;color:var(--steel)}
@@ -80,6 +81,7 @@ footer a{font-weight:700}
   </section>
 
   <section id="room" hidden style="display:contents">
+   <p class="debug" id="debug" hidden></p>
    <div class="notice"><b>Respeite todos.</b> Não compartilhe nome real, telefone, endereço ou outros dados pessoais. Moderadores podem apagar mensagens.</div>
    <div class="log" id="log" role="log" aria-live="polite" aria-label="Mensagens"></div>
    <p class="status" id="status" role="status"></p>
@@ -162,7 +164,13 @@ onAuthStateChanged(auth,async u=>{
   $("gate").hidden=!!u;$("room").hidden=!u;
   if(!u){$("sub").textContent="Área da equipe";return}
   $("sub").textContent="Logado como "+nameOf(u);
-  try{staff=(await getDoc(doc(db,"staff",u.uid))).exists()}catch(e){staff=false}
+  let staffErr="";
+  try{staff=(await getDoc(doc(db,"staff",u.uid))).exists()}catch(e){staff=false;staffErr=e.code||"erro"}
+  if(staff)$("sub").textContent+=" · MODERADOR";
+  if(new URLSearchParams(location.search).has("debug")){
+    const d=$("debug");d.hidden=false;
+    d.textContent="UID: "+u.uid+" | Moderador: "+(staff?"SIM":"NÃO")+(staffErr?" | erro ao ler staff: "+staffErr:"");
+  }
   start();
 });
 
