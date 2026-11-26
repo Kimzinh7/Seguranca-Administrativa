@@ -59,7 +59,7 @@ textarea:focus-visible{border-color:var(--amber);outline-offset:0}
 button.send{font:inherit;font-size:24px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:var(--black);color:#fff;border:0;border-radius:6px 6px 6px 22px;padding:0 22px;cursor:pointer}
 button.send:hover{background:var(--graphite)}
 button.send:disabled{opacity:.5;cursor:not-allowed}
-.debug{margin:0;background:var(--black);color:#9FE3B4;border-radius:8px;padding:10px 14px;font:600 15px/1.35 ui-monospace,Consolas,monospace;overflow-wrap:anywhere;user-select:all}
+.debug{margin:0;background:var(--black);color:#9FE3B4;border-radius:8px;padding:10px 14px;font:600 15px/1.35 ui-monospace,Consolas,monospace;overflow-wrap:anywhere;white-space:pre-line}
 .status{min-height:24px;font-size:19px;font-weight:700;color:var(--bad)}
 .count{font-size:16px;color:var(--steel);text-align:right;margin-top:-8px}
 footer{text-align:center;font-size:19px;padding:8px 16px 28px;color:var(--steel)}
@@ -158,6 +158,12 @@ function start(){
     });
 }
 
+const ADMINS=["l80KjxxidVenEKOZbkmHVYnUCTD3"]; /* UIDs com poder de moderador (as regras do Firestore têm a mesma lista) */
+async function checkStaff(u){
+  if(ADMINS.includes(u.uid))return true;
+  try{return(await getDoc(doc(db,"staff",u.uid))).exists()}catch(e){return false}
+}
+
 onAuthStateChanged(auth,async u=>{
   if(unsub){unsub();unsub=null}
   me=u;
@@ -165,11 +171,13 @@ onAuthStateChanged(auth,async u=>{
   if(!u){$("sub").textContent="Área da equipe";return}
   $("sub").textContent="Logado como "+nameOf(u);
   let staffErr="";
-  try{staff=(await getDoc(doc(db,"staff",u.uid))).exists()}catch(e){staff=false;staffErr=e.code||"erro"}
+  staff=await checkStaff(u);
   if(staff)$("sub").textContent+=" · MODERADOR";
   if(new URLSearchParams(location.search).has("debug")){
     const d=$("debug");d.hidden=false;
-    d.textContent="UID: "+u.uid+" | Moderador: "+(staff?"SIM":"NÃO")+(staffErr?" | erro ao ler staff: "+staffErr:"");
+    d.textContent="";
+    const k=document.createElement("span");k.textContent=u.uid;k.style.cssText="user-select:all;background:#1F3A2A;padding:2px 6px;border-radius:4px;cursor:copy";
+    d.append("Seu UID (toque para selecionar só ele): ",k,"\nModerador: "+(staff?"SIM":"NÃO")+(staffErr?"\nErro ao ler staff: "+staffErr:""));
   }
   start();
 });
@@ -185,7 +193,7 @@ $("form").onsubmit=async e=>{
   if(wait>0){say("Calma! Espere "+Math.ceil(wait/1000)+"s para enviar outra.");return}
   send.disabled=true;say("");
   try{
-    try{staff=(await getDoc(doc(db,"staff",me.uid))).exists()}catch(e){staff=false}
+    staff=await checkStaff(me);
     const limite=new Promise((_,rej)=>setTimeout(()=>rej({code:"timeout"}),10000));
     await Promise.race([addDoc(collection(db,"messages"),{uid:me.uid,name:nameOf(me),text:t,staff,createdAt:serverTimestamp()}),limite]);
     text.value="";$("count").textContent="0/300";lastSent=Date.now();
