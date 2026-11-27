@@ -78,6 +78,8 @@ a{color:inherit}
 .tagmod{display:inline-block;flex:none;background:#F2B632;color:#2B1F00;font-size:.62em;font-weight:800;letter-spacing:.1em;padding:1px 7px;border-radius:4px;vertical-align:middle}
 .pmenu small{color:var(--gray);font-size:17px}
 .pmenu strong{font-size:24px;word-break:break-all}
+.pmenu a.pcfg{display:block;text-align:center;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;text-decoration:none;border:1px solid var(--steel);border-radius:6px;padding:8px;margin-top:4px}
+.pmenu a.pcfg:hover{background:var(--graphite)}
 .pmenu button{font:inherit;font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--amber);color:#2B1F00;border:0;border-radius:6px;padding:9px;cursor:pointer;margin-top:4px}
 [hidden]{display:none!important}
 
@@ -95,7 +97,7 @@ footer a{font-weight:700;color:inherit}
   <div class="profile" id="profile" hidden>
    <a class="chip" id="chip-guest" href="login.html" hidden><span class="av"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="14" r="6.500" fill="#D5DAE0"/><path d="M5 36c1-8 6-12 13-12s12 4 13 12Z" fill="#D5DAE0"/></svg></span><b>Entrar</b></a>
    <button class="chip" id="chip-user" type="button" aria-haspopup="true" aria-expanded="false" hidden><span class="av"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="14" r="6.500" fill="#D5DAE0"/><path d="M5 36c1-8 6-12 13-12s12 4 13 12Z" fill="#D5DAE0"/></svg></span><b id="pname"></b><span class="tagmod" id="pmod" hidden></span></button>
-   <div class="pmenu" id="pmenu" hidden><small>Logado como</small><strong><span id="pname2"></span> <span id="pmod2"></span></strong><button id="plogout" type="button">Sair da conta</button></div>
+   <div class="pmenu" id="pmenu" hidden><small>Logado como</small><strong><span id="pname2"></span> <span id="pmod2"></span></strong><a class="pcfg" href="configuracoes.html">Configurações</a><button id="plogout" type="button">Sair da conta</button></div>
   </div>
   <h1>Segurança<br>Administrativa</h1>
   <p>ROLEPLAY NO ROBLOX</p>
@@ -129,7 +131,7 @@ footer a{font-weight:700;color:inherit}
 
 <div class="drawer" id="drawer">
  <div class="scrim" id="scrim"></div>
- <nav aria-label="Menu"><a href="#d-operacoes">Operações</a><a href="hierarquia.html">Hierarquia</a><a href="#d-patrulha">Patrulhamento</a><a href="https://www.roblox.com/pt/communities/32830512/SA-Seguran-a-Administrativa" target="_blank" rel="noopener noreferrer">Roblox</a><a href="regras.html">Regras</a><a href="#d-recrutamento">Recrutamento</a><a href="chat.html">Chat</a><a href="anuncios.html">Anúncios</a><a href="lendas.html">Lendas</a><a href="admin.html" id="lk-admin" hidden>Painel de tags</a></nav>
+ <nav aria-label="Menu"><a href="#d-operacoes">Operações</a><a href="hierarquia.html">Hierarquia</a><a href="#d-patrulha">Patrulhamento</a><a href="https://www.roblox.com/pt/communities/32830512/SA-Seguran-a-Administrativa" target="_blank" rel="noopener noreferrer">Roblox</a><a href="regras.html">Regras</a><a href="#d-recrutamento">Recrutamento</a><a href="chat.html">Chat</a><a href="anuncios.html">Anúncios</a><a href="lendas.html">Lendas</a><a href="admin.html" id="lk-admin" hidden>Painel de tags</a><a href="configuracoes.html">Configurações</a></nav>
 </div>
 
 <script>
