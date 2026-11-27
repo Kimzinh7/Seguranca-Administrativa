@@ -94,8 +94,8 @@ footer a{font-weight:700;color:inherit}
   <button class="menu-btn" id="open" aria-label="Abrir menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
   <div class="profile" id="profile" hidden>
    <a class="chip" id="chip-guest" href="login.html" hidden><span class="av"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="14" r="6.500" fill="#D5DAE0"/><path d="M5 36c1-8 6-12 13-12s12 4 13 12Z" fill="#D5DAE0"/></svg></span><b>Entrar</b></a>
-   <button class="chip" id="chip-user" type="button" aria-haspopup="true" aria-expanded="false" hidden><span class="av"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="14" r="6.500" fill="#D5DAE0"/><path d="M5 36c1-8 6-12 13-12s12 4 13 12Z" fill="#D5DAE0"/></svg></span><b id="pname"></b><span class="tagmod" id="pmod" hidden>MOD</span></button>
-   <div class="pmenu" id="pmenu" hidden><small>Logado como</small><strong><span id="pname2"></span> <span class="tagmod" id="pmod2" hidden>MOD</span></strong><button id="plogout" type="button">Sair da conta</button></div>
+   <button class="chip" id="chip-user" type="button" aria-haspopup="true" aria-expanded="false" hidden><span class="av"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="14" r="6.500" fill="#D5DAE0"/><path d="M5 36c1-8 6-12 13-12s12 4 13 12Z" fill="#D5DAE0"/></svg></span><b id="pname"></b><span class="tagmod" id="pmod" hidden></span></button>
+   <div class="pmenu" id="pmenu" hidden><small>Logado como</small><strong><span id="pname2"></span> <span id="pmod2"></span></strong><button id="plogout" type="button">Sair da conta</button></div>
   </div>
   <h1>Segurança<br>Administrativa</h1>
   <p>ROLEPLAY NO ROBLOX</p>
@@ -129,7 +129,7 @@ footer a{font-weight:700;color:inherit}
 
 <div class="drawer" id="drawer">
  <div class="scrim" id="scrim"></div>
- <nav aria-label="Menu"><a href="#d-operacoes">Operações</a><a href="hierarquia.html">Hierarquia</a><a href="#d-patrulha">Patrulhamento</a><a href="https://www.roblox.com/pt/communities/32830512/SA-Seguran-a-Administrativa" target="_blank" rel="noopener noreferrer">Roblox</a><a href="regras.html">Regras</a><a href="#d-recrutamento">Recrutamento</a><a href="chat.html">Chat</a><a href="lendas.html">Lendas</a></nav>
+ <nav aria-label="Menu"><a href="#d-operacoes">Operações</a><a href="hierarquia.html">Hierarquia</a><a href="#d-patrulha">Patrulhamento</a><a href="https://www.roblox.com/pt/communities/32830512/SA-Seguran-a-Administrativa" target="_blank" rel="noopener noreferrer">Roblox</a><a href="regras.html">Regras</a><a href="#d-recrutamento">Recrutamento</a><a href="chat.html">Chat</a><a href="anuncios.html">Anúncios</a><a href="lendas.html">Lendas</a><a href="admin.html" id="lk-admin" hidden>Painel de tags</a></nav>
 </div>
 
 <script>
@@ -141,7 +141,7 @@ dr.querySelectorAll('a').forEach(a=>a.onclick=()=>dr.classList.remove('open'));
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import{getAuth,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,doc,getDoc}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getFirestore,setDoc,doc,getDoc}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig={
   apiKey:"AIzaSyASeulxbc3-6_4lSpOKoNYQr3-Ty3LunY0",
   authDomain:"seguranca-administrativa-rp.firebaseapp.com",
@@ -150,8 +150,20 @@ const firebaseConfig={
 };
 const $=id=>document.getElementById(id);
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
-const ADMINS=["l80KjxxidVenEKOZbkmHVYnUCTD3"];
-async function checkStaff(u){if(ADMINS.includes(u.uid))return true;try{return(await getDoc(doc(db,"staff",u.uid))).exists()}catch(e){return false}}
+const OWNERS=["l80KjxxidVenEKOZbkmHVYnUCTD3"]; /* dono: sempre ADM (as regras do Firestore têm a mesma lista) */
+const ORDER=["ADM","MOD","OPE","PAT","EVT","SOR"];
+const sortTags=t=>ORDER.filter(x=>t.includes(x));
+const can=(t,k)=>t.includes("ADM")||t.includes(k);
+async function myTags(u){
+  let t=[];
+  try{const s=await getDoc(doc(db,"staff",u.uid));if(s.exists())t=(s.data().tags||[]).filter(x=>ORDER.includes(x))}catch(e){}
+  if(OWNERS.includes(u.uid)&&!t.includes("ADM"))t.push("ADM");
+  return sortTags(t);
+}
+async function ensureUser(u){
+  const n=u.displayName||u.email.split("@")[0];
+  try{const r=doc(db,"users",u.uid),s=await getDoc(r);if(!s.exists()||s.data().name!==n)await setDoc(r,{name:n})}catch(e){}
+}
 
 const menu=$("pmenu"),chip=$("chip-user");
 function closeMenu(){menu.hidden=true;chip.setAttribute("aria-expanded","false")}
@@ -162,9 +174,15 @@ $("plogout").onclick=async()=>{await signOut(auth);closeMenu()};
 onAuthStateChanged(auth,u=>{
   $("profile").hidden=false;
   $("chip-guest").hidden=!!u;chip.hidden=!u;closeMenu();
-  $("pmod").hidden=$("pmod2").hidden=true;
+  $("pmod").hidden=true;$("pmod2").textContent="";$("lk-admin").hidden=true;
   if(u){const n=u.displayName||u.email.split("@")[0];$("pname").textContent=n;$("pname2").textContent=n;
-    checkStaff(u).then(v=>{if(auth.currentUser&&auth.currentUser.uid===u.uid)$("pmod").hidden=$("pmod2").hidden=!v})}
+    ensureUser(u);
+    myTags(u).then(t=>{
+      if(!(auth.currentUser&&auth.currentUser.uid===u.uid))return;
+      if(t.length){$("pmod").textContent=t[0];$("pmod").hidden=false}
+      t.forEach(x=>{const e=document.createElement("span");e.className="tagmod";e.textContent=x;$("pmod2").append(e," ")});
+      $("lk-admin").hidden=!t.includes("ADM");
+    })}
 });
 </script>
 </body>

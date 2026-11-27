@@ -103,9 +103,10 @@ footer a{font-weight:700}
   <section id="user" hidden>
    <div class="me">
     <h2>Você está logado</h2>
-    <p>Conta: <b id="who"></b> <span class="tagmod" id="whomod" hidden>MOD</span></p>
+    <p>Conta: <b id="who"></b> <span id="whotags"></span></p>
    </div>
    <a class="chat" href="chat.html">Abrir o chat da equipe</a>
+   <a class="chat" href="anuncios.html">Ver anúncios</a>
    <button class="submit out" id="logout" type="button" style="width:100%">Sair da conta</button>
   </section>
  </main>
@@ -114,7 +115,7 @@ footer a{font-weight:700}
 
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import{getFirestore,doc,getDoc}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getFirestore,setDoc,doc,getDoc}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 /* ============================================================
@@ -149,8 +150,20 @@ const ERR={
 
 let auth=null,db=null;
 if(configured){const app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app)}
-const ADMINS=["l80KjxxidVenEKOZbkmHVYnUCTD3"];
-async function checkStaff(u){if(ADMINS.includes(u.uid))return true;try{return(await getDoc(doc(db,"staff",u.uid))).exists()}catch(e){return false}}
+const OWNERS=["l80KjxxidVenEKOZbkmHVYnUCTD3"]; /* dono: sempre ADM (as regras do Firestore têm a mesma lista) */
+const ORDER=["ADM","MOD","OPE","PAT","EVT","SOR"];
+const sortTags=t=>ORDER.filter(x=>t.includes(x));
+const can=(t,k)=>t.includes("ADM")||t.includes(k);
+async function myTags(u){
+  let t=[];
+  try{const s=await getDoc(doc(db,"staff",u.uid));if(s.exists())t=(s.data().tags||[]).filter(x=>ORDER.includes(x))}catch(e){}
+  if(OWNERS.includes(u.uid)&&!t.includes("ADM"))t.push("ADM");
+  return sortTags(t);
+}
+async function ensureUser(u){
+  const n=u.displayName||u.email.split("@")[0];
+  try{const r=doc(db,"users",u.uid),s=await getDoc(r);if(!s.exists()||s.data().name!==n)await setDoc(r,{name:n})}catch(e){}
+}
 
 
 const Auth={
@@ -169,9 +182,10 @@ const $=id=>document.getElementById(id),msg=$("msg");
 const say=(t,ok)=>{msg.textContent=t;msg.className="msg "+(t?(ok?"ok":"bad"):"")};
 function render(u){
   $("guest").hidden=!!u;$("user").hidden=!u;
-  $("whomod").hidden=true;
+  $("whotags").textContent="";
   if(u){$("who").textContent=nameOf(u);
-    checkStaff(u).then(v=>{if(auth.currentUser&&auth.currentUser.uid===u.uid)$("whomod").hidden=!v})}
+    ensureUser(u);
+    myTags(u).then(t=>{if(auth.currentUser&&auth.currentUser.uid===u.uid)t.forEach(x=>{const e=document.createElement("span");e.className="tagmod";e.textContent=x;$("whotags").append(e," ")})})}
 }
 function tab(reg){
   $("f-login").hidden=reg;$("f-reg").hidden=!reg;

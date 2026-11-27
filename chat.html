@@ -98,7 +98,7 @@ footer a{font-weight:700}
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import{getAuth,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,collection,addDoc,deleteDoc,doc,getDoc,query,orderBy,limit,onSnapshot,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getFirestore,collection,addDoc,deleteDoc,setDoc,doc,getDoc,query,orderBy,limit,onSnapshot,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const firebaseConfig={
   apiKey:"AIzaSyASeulxbc3-6_4lSpOKoNYQr3-Ty3LunY0",
   authDomain:"seguranca-administrativa-rp.firebaseapp.com",
@@ -109,7 +109,7 @@ const firebaseConfig={
 const $=id=>document.getElementById(id);
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 const log=$("log"),status=$("status"),text=$("text"),send=$("send");
-let me=null,staff=false,unsub=null,lastSent=0;
+let me=null,tags=[],staff=false,unsub=null,lastSent=0;
 const COOLDOWN=2500;
 
 const nameOf=u=>u.displayName||u.email.split("@")[0];
@@ -128,10 +128,10 @@ function render(docs){
   if(!docs.length){const e=document.createElement("div");e.className="empty";e.textContent="Nenhuma mensagem ainda. Seja o primeiro!";log.append(e);return}
   for(const d of docs){
     const m=d.data({serverTimestamps:"estimate"}),mine=m.uid===me.uid;
-    const box=document.createElement("div");box.className="msg"+(mine?" mine":"")+(m.staff?" staff":"");
+    const box=document.createElement("div");box.className="msg"+(mine?" mine":"")+((m.badges||(m.staff?["MOD"]:[])).length?" staff":"");
     const meta=document.createElement("div");meta.className="meta";
     const n=document.createElement("b");n.textContent=m.name;meta.append(n);
-    if(m.staff){const b=document.createElement("span");b.className="badge";b.textContent="MOD";meta.append(b)}
+    for(const g of sortTags(m.badges||(m.staff?["MOD"]:[])).slice(0,3)){const b=document.createElement("span");b.className="badge";b.textContent=g;meta.append(b)}
     const t=document.createElement("span");t.textContent=fmt(m.createdAt);meta.append(t);
     if(mine||staff){
       const x=document.createElement("button");x.className="del";x.type="button";x.textContent="Apagar";
@@ -158,10 +158,19 @@ function start(){
     });
 }
 
-const ADMINS=["l80KjxxidVenEKOZbkmHVYnUCTD3"]; /* UIDs com poder de moderador (as regras do Firestore têm a mesma lista) */
-async function checkStaff(u){
-  if(ADMINS.includes(u.uid))return true;
-  try{return(await getDoc(doc(db,"staff",u.uid))).exists()}catch(e){return false}
+const OWNERS=["l80KjxxidVenEKOZbkmHVYnUCTD3"]; /* dono: sempre ADM (as regras do Firestore têm a mesma lista) */
+const ORDER=["ADM","MOD","OPE","PAT","EVT","SOR"];
+const sortTags=t=>ORDER.filter(x=>t.includes(x));
+const can=(t,k)=>t.includes("ADM")||t.includes(k);
+async function myTags(u){
+  let t=[];
+  try{const s=await getDoc(doc(db,"staff",u.uid));if(s.exists())t=(s.data().tags||[]).filter(x=>ORDER.includes(x))}catch(e){}
+  if(OWNERS.includes(u.uid)&&!t.includes("ADM"))t.push("ADM");
+  return sortTags(t);
+}
+async function ensureUser(u){
+  const n=u.displayName||u.email.split("@")[0];
+  try{const r=doc(db,"users",u.uid),s=await getDoc(r);if(!s.exists()||s.data().name!==n)await setDoc(r,{name:n})}catch(e){}
 }
 
 onAuthStateChanged(auth,async u=>{
@@ -171,13 +180,13 @@ onAuthStateChanged(auth,async u=>{
   if(!u){$("sub").textContent="Área da equipe";return}
   $("sub").textContent="Logado como "+nameOf(u);
   let staffErr="";
-  staff=await checkStaff(u);
-  if(staff)$("sub").textContent+=" · MODERADOR";
+  tags=await myTags(u);staff=can(tags,"MOD");ensureUser(u);
+  if(tags.length)$("sub").textContent+=" · "+tags.join(" · ");
   if(new URLSearchParams(location.search).has("debug")){
     const d=$("debug");d.hidden=false;
     d.textContent="";
     const k=document.createElement("span");k.textContent=u.uid;k.style.cssText="user-select:all;background:#1F3A2A;padding:2px 6px;border-radius:4px;cursor:copy";
-    d.append("Seu UID (toque para selecionar só ele): ",k,"\nModerador: "+(staff?"SIM":"NÃO")+(staffErr?"\nErro ao ler staff: "+staffErr:""));
+    d.append("Seu UID (toque para selecionar só ele): ",k,"\nTags: "+(tags.join(", ")||"nenhuma")+(staffErr?"\nErro ao ler staff: "+staffErr:""));
   }
   start();
 });
@@ -193,9 +202,9 @@ $("form").onsubmit=async e=>{
   if(wait>0){say("Calma! Espere "+Math.ceil(wait/1000)+"s para enviar outra.");return}
   send.disabled=true;say("");
   try{
-    staff=await checkStaff(me);
+    tags=await myTags(me);staff=can(tags,"MOD");
     const limite=new Promise((_,rej)=>setTimeout(()=>rej({code:"timeout"}),10000));
-    await Promise.race([addDoc(collection(db,"messages"),{uid:me.uid,name:nameOf(me),text:t,staff,createdAt:serverTimestamp()}),limite]);
+    await Promise.race([addDoc(collection(db,"messages"),{uid:me.uid,name:nameOf(me),text:t,badges:tags,createdAt:serverTimestamp()}),limite]);
     text.value="";$("count").textContent="0/300";lastSent=Date.now();
   }catch(err){say(err.code==="permission-denied"?"Mensagem recusada pelas regras do chat."
     :err.code==="timeout"?"O servidor não respondeu. Confira se o Firestore foi criado e se as regras foram publicadas."
